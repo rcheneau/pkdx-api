@@ -36,7 +36,11 @@ use Symfony\Component\Serializer\Annotation\Groups;
         'groups' => ['type'],
     ]
 )]
-#[ApiFilter(GroupFilter::class, arguments: ['parameterName' => 'groups', 'overrideDefaultGroups' => false, 'whitelist' => ['translations']])]
+#[ApiFilter(GroupFilter::class, arguments: [
+    'parameterName'         => 'groups',
+    'overrideDefaultGroups' => false,
+    'whitelist'             => ['translations'],
+])]
 class PokemonType extends AbstractTranslatable
 {
     #[ORM\Id]
@@ -45,17 +49,23 @@ class PokemonType extends AbstractTranslatable
     private int $id;
 
     #[Groups(['type'])]
+    /** @phpstan-ignore-next-line Virtual property */
     private string $name;
 
+    /** @var ArrayCollection<string, PokemonTypeTranslation> */
     #[ORM\OneToMany(mappedBy: 'translatable', targetEntity: PokemonTypeTranslation::class, cascade: ['persist'], fetch: 'EAGER', orphanRemoval: true, indexBy: 'locale')]
     #[Groups(['translations'])]
     #[ApiProperty(fetchEager: true)]
     protected $translations;
 
+    /**
+     * @param int                                              $id
+     * @param array<string, array{locale:string, name:string}> $translations
+     */
     public function __construct(int $id, array $translations)
     {
         parent::__construct();
-        $this->id = $id;
+        $this->id           = $id;
         $this->translations = new ArrayCollection(
             array_map(
                 fn($v) => new PokemonTypeTranslation($this, $v['locale'], $v['name']),
@@ -89,6 +99,6 @@ class PokemonType extends AbstractTranslatable
 
     public function __toString()
     {
-        return $this->id . "";
+        return $this->id."";
     }
 }

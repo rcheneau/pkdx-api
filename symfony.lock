@@ -102,6 +102,9 @@
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.5"
     },
+    "jetbrains/phpstorm-attributes": {
+        "version": "1.0"
+    },
     "laminas/laminas-code": {
         "version": "4.5.0"
     },
@@ -133,6 +136,9 @@
         "version": "1.5.1"
     },
     "phpstan/phpdoc-parser": {
+        "version": "1.2.0"
+    },
+    "phpstan/phpstan": {
         "version": "1.2.0"
     },
     "psr/link": {

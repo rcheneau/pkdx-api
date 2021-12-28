@@ -84,6 +84,8 @@
         }
     },
     "require-dev": {
+        "jetbrains/phpstorm-attributes": "^1.0",
+        "phpstan/phpstan": "^1.2",
         "symfony/maker-bundle": "^1.36",
         "symfony/web-profiler-bundle": "6.0.*"
     }

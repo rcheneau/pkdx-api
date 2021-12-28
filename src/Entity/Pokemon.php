@@ -48,8 +48,10 @@ class Pokemon extends AbstractTranslatable
     private int $id;
 
     #[Groups(['pokemon'])]
+    /** @phpstan-ignore-next-line Virtual property */
     private string $name;
 
+    /** @var ArrayCollection<string, PokemonTranslation> */
     #[ORM\OneToMany(mappedBy: 'translatable', targetEntity: PokemonTranslation::class, cascade: ['persist'], fetch: 'EAGER', orphanRemoval: true, indexBy: 'locale')]
     #[Groups(['translations'])]
     #[ApiProperty(fetchEager: true)]
@@ -65,6 +67,12 @@ class Pokemon extends AbstractTranslatable
     #[Groups(['type'])]
     private ?PokemonType $type2;
 
+    /**
+     * @param int                                              $id
+     * @param array<string, array{locale:string, name:string}> $translations
+     * @param PokemonType                                      $type1
+     * @param PokemonType|null                                 $type2
+     */
     public function __construct(int $id, array $translations, PokemonType $type1, ?PokemonType $type2)
     {
         parent::__construct();

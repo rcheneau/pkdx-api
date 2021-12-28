@@ -9,6 +9,8 @@ use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
+ * @extends ServiceEntityRepository<PokemonType>
+ *
  * @method PokemonType|null find($id, $lockMode = null, $lockVersion = null)
  * @method PokemonType|null findOneBy(array $criteria, array $orderBy = null)
  * @method PokemonType[]    findAll()
