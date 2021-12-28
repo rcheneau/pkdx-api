@@ -6,7 +6,7 @@ jobs:
         steps:
             -   uses: actions/checkout@v2
             -   name: Local PHP Security Checker
-                uses: ./bin/local-php-security-checker_1.2.0
+                uses: sh ./scripts/local-php-security-checker.sh
     phpstan:
         runs-on: ubuntu-latest
         steps:
