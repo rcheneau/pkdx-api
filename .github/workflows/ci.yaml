@@ -17,19 +17,50 @@ jobs:
                 with:
                     path: src/
                     level: max
-    test:
+
+    symfony:
+        name: Symfony (PHP ${{ matrix.php-versions }})
         runs-on: ubuntu-latest
         services:
             postgres:
-                image: postgres
+                image: postgres:latest
                 env:
+                    POSTGRES_USER: postgres
                     POSTGRES_PASSWORD: postgres
-                options: >-
-                    --health-cmd pg_isready
-                    --health-interval 10s
-                    --health-timeout 5s
-                    --health-retries 5
+                    POSTGRES_DB: postgres
+                ports:
+                    - 5432/tcp
+                options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
+        strategy:
+            fail-fast: false
+            matrix:
+                php-versions: [ '8.1' ]
         steps:
-            -   uses: actions/checkout@v2
-            -   uses: php-actions/composer@v6
+            -   name: Checkout
+                uses: actions/checkout@v2
+            -   name: Setup PHP
+                uses: shivammathur/setup-php@v2
+                with:
+                    php-version: ${{ matrix.php-versions }}
+                    tools: phpunit-bridge
+                    extensions: pdo_sqlite, pgsql
+                    # coverage: xdebug
+            -   name: Get composer cache directory
+                id: composer-cache
+                run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+            -   name: Cache composer dependencies
+                uses: actions/cache@v2
+                with:
+                    path: ${{ steps.composer-cache.outputs.dir }}
+                    key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+                    restore-keys: ${{ runner.os }}-composer-
+            -   name: Install Composer dependencies
+                run: composer install --no-progress --prefer-dist --optimize-autoloader
+            -   name: Run Migration
+                run: |
+                    composer require --dev symfony/orm-pack
+                    php bin/console doctrine:schema:update --force || echo "No migrations found or schema update failed"
+                    php bin/console doctrine:migrations:migrate || echo "No migrations found or migration failed"
+                env:
+                    DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?charset=UTF-8
             -   uses: php-actions/phpunit@v9
