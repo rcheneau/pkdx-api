@@ -105,6 +105,9 @@
     "jetbrains/phpstorm-attributes": {
         "version": "1.0"
     },
+    "justinrainbow/json-schema": {
+        "version": "5.2.11"
+    },
     "laminas/laminas-code": {
         "version": "4.5.0"
     },
@@ -147,11 +150,23 @@
     "symfony/asset": {
         "version": "v5.4.0"
     },
+    "symfony/browser-kit": {
+        "version": "v6.0.1"
+    },
     "symfony/doctrine-bridge": {
         "version": "v5.4.1"
     },
+    "symfony/dom-crawler": {
+        "version": "v6.0.1"
+    },
     "symfony/expression-language": {
         "version": "v5.4.0"
+    },
+    "symfony/http-client": {
+        "version": "v6.0.1"
+    },
+    "symfony/http-client-contracts": {
+        "version": "v3.0.0"
     },
     "symfony/maker-bundle": {
         "version": "1.36",
@@ -164,6 +179,21 @@
     },
     "symfony/password-hasher": {
         "version": "v5.4.0"
+    },
+    "symfony/phpunit-bridge": {
+        "version": "6.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes",
+            "branch": "master",
+            "version": "5.3",
+            "ref": "97cb3dc7b0f39c7cfc4b7553504c9d7b7795de96"
+        },
+        "files": [
+            ".env.test",
+            "bin/phpunit",
+            "phpunit.xml.dist",
+            "tests/bootstrap.php"
+        ]
     },
     "symfony/property-access": {
         "version": "v5.4.0"

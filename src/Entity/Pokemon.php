@@ -23,11 +23,13 @@ use Symfony\Component\Serializer\Annotation\Groups;
 #[ApiResource(
     collectionOperations: [
         'get' => [
+            'path'   => '/pokemons',
             'method' => 'GET',
         ],
     ],
     itemOperations: [
         'get' => [
+            'path'   => '/pokemons/{id}',
             'method' => 'GET',
         ],
     ],
