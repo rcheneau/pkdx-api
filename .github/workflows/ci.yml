@@ -1,6 +1,12 @@
 name: CI
 on: [ push ]
 jobs:
+    security:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v2
+            -   name: Local PHP Security Checker
+                uses: bin/local-php-security-checker_1.2.0
     phpstan:
         runs-on: ubuntu-latest
         steps:
