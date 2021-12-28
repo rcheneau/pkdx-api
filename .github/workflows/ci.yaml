@@ -19,6 +19,14 @@ jobs:
                     level: max
     test:
         runs-on: ubuntu-latest
+        services:
+            postgres:
+                image: postgres
+                options: >-
+                    --health-cmd pg_isready
+                    --health-interval 10s
+                    --health-timeout 5s
+                    --health-retries 5
         steps:
             -   uses: actions/checkout@v2
             -   uses: php-actions/composer@v6
