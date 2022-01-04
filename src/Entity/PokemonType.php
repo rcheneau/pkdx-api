@@ -95,9 +95,4 @@ class PokemonType extends AbstractTranslatable
     {
         return new PokemonTypeTranslation($this, '', '');
     }
-
-    public function __toString()
-    {
-        return $this->id."";
-    }
 }
