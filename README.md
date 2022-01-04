@@ -10,7 +10,7 @@
     symfony server:start --port 8005
 
 ## Getting started
-Access the API via the [/api](https://localhost:8005) URL.  
+Access the API via the [/api](https://localhost:8005/api) URL.  
 
 ### Translations
 By default, results are in english. Use `Accept-Language` header to replace it with one of supported locales.  
