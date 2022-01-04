@@ -18,8 +18,8 @@ jobs:
                     path: src/
                     level: max
 
-    symfony:
-        name: Symfony (PHP ${{ matrix.php-versions }})
+    phpunit:
+        name: PHPUnit (PHP ${{ matrix.php-versions }})
         runs-on: ubuntu-latest
         services:
             postgres:
@@ -32,7 +32,7 @@ jobs:
                     - 5432/tcp
                 options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 3
         strategy:
-            fail-fast: false
+            # fail-fast: false
             matrix:
                 php-versions: [ '8.1' ]
         steps:
@@ -42,8 +42,7 @@ jobs:
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-versions }}
-                    tools: phpunit-bridge
-                    extensions: pdo_sqlite, pgsql
+                    extensions: pgsql
                     # coverage: xdebug
             -   name: Get composer cache directory
                 id: composer-cache
@@ -63,4 +62,5 @@ jobs:
                     php bin/console doctrine:migrations:migrate || echo "No migrations found or migration failed"
                 env:
                     DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/postgres?charset=UTF-8
-            -   uses: php-actions/phpunit@v9
+            -   name: Test with phpunit
+                run: bin/phpunit
