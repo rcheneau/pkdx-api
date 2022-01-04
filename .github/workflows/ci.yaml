@@ -38,30 +38,36 @@ jobs:
         steps:
             -   name: Checkout
                 uses: actions/checkout@v2
+
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
                     php-version: ${{ matrix.php-versions }}
                     extensions: pgsql
                     # coverage: xdebug
+
             -   name: Get composer cache directory
                 id: composer-cache
                 run: echo "::set-output name=dir::$(composer config cache-files-dir)"
+
             -   name: Cache composer dependencies
                 uses: actions/cache@v2
                 with:
                     path: ${{ steps.composer-cache.outputs.dir }}
                     key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
                     restore-keys: ${{ runner.os }}-composer-
+
             -   name: Install Composer dependencies
                 run: composer install --no-progress --prefer-dist --optimize-autoloader
-            -   name: Run Migration
+
+            -   name: Run Migration and load database
                 run: |
-                    composer require --dev symfony/orm-pack
-                    php bin/console doctrine:schema:update --force || echo "No migrations found or schema update failed"
-                    php bin/console doctrine:migrations:migrate || echo "No migrations found or migration failed"
+                    php bin/console doctrine:schema:create || echo "No migrations found or schema update failed"
+                    php bin/console doctrine:migrations:migrate --no-interaction || echo "No migrations found or migration failed"
+                    php bin/console app:load-csv
                 env:
                     DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/pkdx?charset=UTF-8
+
             -   name: Test with phpunit
                 run: bin/phpunit
                 env:
