@@ -8,8 +8,10 @@ use App\Entity\Pokemon;
 use App\Entity\PokemonTranslation;
 use App\Entity\PokemonType;
 use App\Entity\PokemonTypeAffinity;
+use App\Enum\PokemonGrowthRateEnum;
 use Doctrine\ORM\EntityManagerInterface;
 use JetBrains\PhpStorm\ArrayShape;
+use LogicException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -137,14 +139,35 @@ final class LoadCsvToDB extends Command
 
         $lastInsertedPokemonNumber = $number;
 
-        $type1 = $row[$headers['type_1']];
-        $type2 = $row[$headers['type_2']];
-        $data  = [
-            'id'           => $number,
-            'translations' => self::getTranslations($headers, $row, 'name'),
-            'type1'        => $this->getTypeFromName($type1),
-            'type2'        => $type2 !== '' ? $this->getTypeFromName($type2) : null,
+        $data = [
+            'id'             => $number,
+            'translations'   => self::getTranslations($headers, $row, 'name'),
+            'type1'          => $this->getTypeFromName($row[$headers['type_1']]),
+            'type2'          => $this->getTypeFromName($row[$headers['type_2']]),
+            'height'         => floatval($row[$headers['height_m']]),
+            'weight'         => floatval($row[$headers['weight_kg']]),
+            'hp'             => intval($row[$headers['hp']]),
+            'attack'         => intval($row[$headers['attack']]),
+            'defense'        => intval($row[$headers['defense']]),
+            'spAttack'       => intval($row[$headers['sp_attack']]),
+            'spDefense'      => intval($row[$headers['sp_defense']]),
+            'speed'          => intval($row[$headers['speed']]),
+            'catchRate'      => intval($row[$headers['catch_rate']]),
+            'baseExperience' => intval($row[$headers['base_experience']]),
+            'baseFriendship' => intval($row[$headers['base_friendship']]),
+            'growthRate'     => PokemonGrowthRateEnum::tryFrom(
+                str_replace(' ', '_', strtolower($row[$headers['growth_rate']]))
+            ),
+            'percentageMale' => floatval($row[$headers['percentage_male']]),
+            'eggCycles'      => intval($row[$headers['egg_cycles']]),
         ];
+
+        if (!$data['type1']) {
+            throw new LogicException('Could not read data type_1 from csv.');
+        }
+        if (!$data['growthRate']) {
+            throw new LogicException('Could not read data grow_rate from csv.');
+        }
 
         return new Pokemon(...$data);
     }
@@ -190,27 +213,31 @@ final class LoadCsvToDB extends Command
         return $types;
     }
 
-    private function getTypeFromName(string $name): PokemonType
+    private function getTypeFromName(string $name): ?PokemonType
     {
+        if (!$name) {
+            return null;
+        }
+
         return $this->getTypes()[$name];
     }
 
     private function saveTypeAffinities(): void
     {
-         $types = $this->getTypes();
+        $types = $this->getTypes();
 
-         foreach ($types as $name => $type) {
-             foreach ($this->typeAffinities[$name] as $typeAffinity) {
-                 $affinity = floatval($typeAffinity['affinity']);
-                 if (1. === $affinity) {
-                     continue;
-                 }
-                 $typeAffinity = new PokemonTypeAffinity($type, $types[$typeAffinity['type']], $affinity);
+        foreach ($types as $name => $type) {
+            foreach ($this->typeAffinities[$name] as $typeAffinity) {
+                $affinity = floatval($typeAffinity['affinity']);
+                if (1. === $affinity) {
+                    continue;
+                }
+                $typeAffinity = new PokemonTypeAffinity($type, $types[$typeAffinity['type']], $affinity);
 
-                 $this->em->persist($typeAffinity);
-             }
-         }
-         $this->em->flush();
+                $this->em->persist($typeAffinity);
+            }
+        }
+        $this->em->flush();
     }
 
     /**
