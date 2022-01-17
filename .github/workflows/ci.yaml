@@ -69,6 +69,6 @@ jobs:
                     DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/pkdx?charset=UTF-8
 
             -   name: Test with phpunit
-                run: bin/phpunit
+                run: ./vendor/bin/phpunit
                 env:
                     DATABASE_URL: postgres://postgres:postgres@127.0.0.1:${{ job.services.postgres.ports[5432] }}/pkdx?charset=UTF-8
