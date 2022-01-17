@@ -8,13 +8,16 @@ use ApiPlatform\Core\Annotation\ApiFilter;
 use ApiPlatform\Core\Annotation\ApiProperty;
 use ApiPlatform\Core\Annotation\ApiResource;
 use ApiPlatform\Core\Serializer\Filter\GroupFilter;
+use App\DTO\PokemonTypeAffinityOutput;
 use App\Repository\PokemonTypeRepository;
 use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use JetBrains\PhpStorm\Pure;
 use Locastic\ApiPlatformTranslationBundle\Model\AbstractTranslatable;
 use Locastic\ApiPlatformTranslationBundle\Model\TranslationInterface;
 use Symfony\Component\Serializer\Annotation\Groups;
+use Symfony\Component\Serializer\Annotation\SerializedName;
 
 /**
  * @method PokemonTranslation getTranslation(?string $locale = null)
@@ -57,6 +60,12 @@ class PokemonType extends AbstractTranslatable
     #[ApiProperty(fetchEager: true)]
     protected $translations;
 
+    #[ORM\OneToMany(mappedBy: 'toType', targetEntity: PokemonTypeAffinity::class)]
+    private Collection $fromTypeAffinities;
+
+    #[ORM\OneToMany(mappedBy: 'fromType', targetEntity: PokemonTypeAffinity::class)]
+    private Collection $toTypeAffinities;
+
     /**
      * @param int                                              $id
      * @param array<string, array{locale:string, name:string}> $translations
@@ -64,8 +73,10 @@ class PokemonType extends AbstractTranslatable
     public function __construct(int $id, array $translations)
     {
         parent::__construct();
-        $this->id           = $id;
-        $this->translations = new ArrayCollection(
+        $this->id                 = $id;
+        $this->fromTypeAffinities = new ArrayCollection();
+        $this->toTypeAffinities   = new ArrayCollection();
+        $this->translations       = new ArrayCollection(
             array_map(
                 fn($v) => new PokemonTypeTranslation($this, $v['locale'], $v['name']),
                 $translations
@@ -94,5 +105,29 @@ class PokemonType extends AbstractTranslatable
     protected function createTranslation(): TranslationInterface
     {
         return new PokemonTypeTranslation($this, '', '');
+    }
+
+    /**
+     * @return array<int, PokemonTypeAffinityOutput>
+     */
+    #[Groups(['type'])]
+    #[SerializedName('fromTypeAffinities')]
+    public function getFromTypeAffinitiesValues(): array
+    {
+        return $this->fromTypeAffinities
+            ->map(fn(PokemonTypeAffinity $a) => new PokemonTypeAffinityOutput($a->getFromType(), $a->getModifier()))
+            ->toArray();
+    }
+
+    /**
+     * @return array<int, PokemonTypeAffinityOutput>
+     */
+    #[Groups(['type'])]
+    #[SerializedName('toTypeAffinities')]
+    public function getToTypeAffinitiesValues(): array
+    {
+        return $this->toTypeAffinities
+            ->map(fn(PokemonTypeAffinity $a) => new PokemonTypeAffinityOutput($a->getToType(), $a->getModifier()))
+            ->toArray();
     }
 }

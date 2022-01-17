@@ -7,6 +7,7 @@ namespace App\Command;
 use App\Entity\Pokemon;
 use App\Entity\PokemonTranslation;
 use App\Entity\PokemonType;
+use App\Entity\PokemonTypeAffinity;
 use Doctrine\ORM\EntityManagerInterface;
 use JetBrains\PhpStorm\ArrayShape;
 use Symfony\Component\Console\Command\Command;
@@ -21,6 +22,8 @@ final class LoadCsvToDB extends Command
 
     private EntityManagerInterface $em;
     private string                 $projectDir;
+
+    private array $typeAffinities = [];
 
     public function __construct(EntityManagerInterface $em, string $projectDir)
     {
@@ -79,6 +82,10 @@ final class LoadCsvToDB extends Command
                 $this->em->clear($clear);
             }
 
+            if (null !== ($csvHandler['onCompletion'] ?? null)) {
+                $csvHandler['onCompletion']();
+            }
+
             fclose($fp);
             $output->writeln("$i items loaded.");
         }
@@ -91,14 +98,15 @@ final class LoadCsvToDB extends Command
      * Must define 'csv' and 'handler' key.
      * Clear is optional and list which entities can be detached during bulk inserts.
      *
-     * @return array<int, array{csv: string, handler: callable, clear?: array<int, string>}>
+     * @return array<int, array{csv: string, handler: callable, onCompletion?: callable, clear?: array<int, string>}>
      */
     private function csvHandlers(): array
     {
         return [
             [
-                'csv'     => 'assets/types.csv',
-                'handler' => fn($h, $r, $n) => $this->rowToType($h, $r, $n),
+                'csv'          => 'assets/types.csv',
+                'handler'      => fn($h, $r, $n) => $this->rowToType($h, $r, $n),
+                'onCompletion' => fn() => $this->saveTypeAffinities(),
             ],
             [
                 'csv'     => 'assets/pokedex.csv',
@@ -130,8 +138,8 @@ final class LoadCsvToDB extends Command
         $data  = [
             'id'           => $number,
             'translations' => self::getTranslations($headers, $row, 'name'),
-            'type1'        => $this->getTypes($type1),
-            'type2'        => $type2 !== '' ? $this->getTypes($type2) : null,
+            'type1'        => $this->getTypeFromName($type1),
+            'type2'        => $type2 !== '' ? $this->getTypeFromName($type2) : null,
         ];
 
         return new Pokemon(...$data);
@@ -151,10 +159,21 @@ final class LoadCsvToDB extends Command
             'translations' => self::getTranslations($headers, $row, 'name'),
         ];
 
+        $affinities = array_slice(array_flip($headers), 3, null, true);
+
+        $this->typeAffinities[$row[0]] = array_map(
+            fn($v, $k) => ['type' => $v, 'affinity' => $row[$k]],
+            $affinities,
+            array_keys($affinities)
+        );
+
         return new PokemonType(...$data);
     }
 
-    private function getTypes(string $name): PokemonType
+    /**
+     * @return array<string, PokemonType>
+     */
+    private function getTypes(): array
     {
         static $types = [];
 
@@ -164,7 +183,30 @@ final class LoadCsvToDB extends Command
             }
         }
 
-        return $types[$name];
+        return $types;
+    }
+
+    private function getTypeFromName(string $name): PokemonType
+    {
+        return $this->getTypes()[$name];
+    }
+
+    private function saveTypeAffinities(): void
+    {
+         $types = $this->getTypes();
+
+         foreach ($types as $name => $type) {
+             foreach ($this->typeAffinities[$name] as $typeAffinity) {
+                 $affinity = floatval($typeAffinity['affinity']);
+                 if (1. === $affinity) {
+                     continue;
+                 }
+                 $typeAffinity = new PokemonTypeAffinity($type, $types[$typeAffinity['type']], $affinity);
+
+                 $this->em->persist($typeAffinity);
+             }
+         }
+         $this->em->flush();
     }
 
     /**
