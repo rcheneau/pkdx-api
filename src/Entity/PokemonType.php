@@ -60,9 +60,11 @@ class PokemonType extends AbstractTranslatable
     #[ApiProperty(fetchEager: true)]
     protected $translations;
 
+    /** @var Collection<int, PokemonTypeAffinity> */
     #[ORM\OneToMany(mappedBy: 'toType', targetEntity: PokemonTypeAffinity::class)]
     private Collection $fromTypeAffinities;
 
+    /** @var Collection<int, PokemonTypeAffinity> */
     #[ORM\OneToMany(mappedBy: 'fromType', targetEntity: PokemonTypeAffinity::class)]
     private Collection $toTypeAffinities;
 

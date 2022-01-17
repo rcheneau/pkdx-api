@@ -23,6 +23,9 @@ final class LoadCsvToDB extends Command
     private EntityManagerInterface $em;
     private string                 $projectDir;
 
+    /**
+     * @var array<string, array<int, array{affinity: string, type: string}>>
+     */
     private array $typeAffinities = [];
 
     public function __construct(EntityManagerInterface $em, string $projectDir)
@@ -82,8 +85,9 @@ final class LoadCsvToDB extends Command
                 $this->em->clear($clear);
             }
 
-            if (null !== ($csvHandler['onCompletion'] ?? null)) {
-                $csvHandler['onCompletion']();
+            $onCompletion = $csvHandler['onCompletion'] ?? null;
+            if ($onCompletion) {
+                $onCompletion();
             }
 
             fclose($fp);

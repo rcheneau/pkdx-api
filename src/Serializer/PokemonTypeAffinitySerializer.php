@@ -6,7 +6,6 @@ namespace App\Serializer;
 
 use ApiPlatform\Core\Api\IriConverterInterface;
 use App\DTO\PokemonTypeAffinityOutput;
-use App\Entity\PokemonType;
 use Symfony\Component\Serializer\Exception\ExceptionInterface;
 use Symfony\Component\Serializer\Normalizer\ContextAwareNormalizerInterface;
 use Symfony\Component\Serializer\Normalizer\NormalizerAwareInterface;
@@ -25,6 +24,13 @@ final class PokemonTypeAffinitySerializer implements ContextAwareNormalizerInter
         $this->iriConverter = $iriConverter;
     }
 
+    /**
+     * @param mixed                $data
+     * @param string|null          $format
+     * @param array<string, mixed> $context
+     *
+     * @return bool
+     */
     public function supportsNormalization(mixed $data, string $format = null, array $context = []): bool
     {
         if (isset($context[self::ALREADY_CALLED])) {
@@ -37,15 +43,16 @@ final class PokemonTypeAffinitySerializer implements ContextAwareNormalizerInter
     /**
      * @param PokemonTypeAffinityOutput $object
      * @param string|null               $format
-     * @param array                     $context
+     * @param array<string, mixed>      $context
      *
-     * @return array
+     * @return array<string, mixed>
      * @throws ExceptionInterface
      */
     public function normalize(mixed $object, string $format = null, array $context = []): array
     {
         $context[self::ALREADY_CALLED] = true;
 
+        /** @var array<string, mixed> $data */
         $data = $this->normalizer->normalize($object, $format, $context);
 
         $data['type'] = $this->iriConverter->getIriFromItem($object->type);
